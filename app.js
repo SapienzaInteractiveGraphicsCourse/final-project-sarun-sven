@@ -92,6 +92,10 @@ function initialize(){
     //model
     const loader = new GLTFLoader().load( 'models/Soldier.glb', function ( gltf ) {
         loaded_model = gltf.scene;
+
+        //print scenegraph 
+        // console.log(dumpObject(loaded_model).join('\n'));
+
         loaded_model.castShadow = true;
         loaded_model.traverse(function (node) {
             if (node.isMesh) {
