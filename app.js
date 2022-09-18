@@ -28,7 +28,7 @@ var keys = {
 
 function initialize(){
     //Renderer
-    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer = new THREE.WebGLRenderer();
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
     renderer.setClearColor("#e5e5e5");
@@ -81,7 +81,7 @@ function initialize(){
     //plane
     plane = new THREE.Mesh(
         new THREE.PlaneGeometry(100, 100, 1, 1),
-        new THREE.MeshPhongMaterial({color: 0xFFFFFF})
+        new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load('skybox_img/mystic_dn.jpg') })
     );
     plane.castShadow = true;
     plane.recieveShadow = true;
@@ -179,26 +179,26 @@ function update(walk){
     
     if(walk){
         //left arm
-        setanitmaion_interval(1, 0.01, true, 2);
-        setanitmaion_interval(2, 0.01, true, 2);
+        setanitmaion_interval(1, 0.01, true, 2.5);
+        setanitmaion_interval(2, 0.01, true, 2.5);
         leftarm.rotation.y = theta[1];
         lefForeArm.rotation.x = theta[2];
         
         // //right arm
-        setanitmaion_interval(4, 0.01, true, 2);
-        setanitmaion_interval(5, 0.01, true, 2);
+        setanitmaion_interval(4, 0.01, true, 2.5);
+        setanitmaion_interval(5, 0.01, true, 2.5);
         rightarm.rotation.y = theta[4];
         rightForeArm.rotation.x = theta[5];
 
         //left leg
-        setanitmaion_interval(6, 0.01, true, 2);
-        setanitmaion_interval(7, 0.01, true, 2);
+        setanitmaion_interval(6, 0.01, true, 2.5);
+        setanitmaion_interval(7, 0.01, true, 2.5);
         leftupleg.rotation.x = theta[6];
         leftlowleg.rotation.x = theta[7];
 
         //right leg
-        setanitmaion_interval(8, 0.01, true, 2);
-        setanitmaion_interval(9, 0.01, true, 2);
+        setanitmaion_interval(8, 0.01, true, 2.5);
+        setanitmaion_interval(9, 0.01, true, 2.5);
         rightupleg.rotation.x = theta[8];
         rightlowleg.rotation.x = theta[9];
     }
