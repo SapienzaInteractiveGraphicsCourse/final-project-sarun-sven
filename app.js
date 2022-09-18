@@ -4,14 +4,20 @@ import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/js
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
 
 
-let scene, camera, renderer, cube, light, ambientlight;
+let scene, camera, renderer, cube, light, ambientlight, plane;
 let loaded_model, leftarm , lefForeArm, rightarm, rightForeArm, leftupleg, leftlowleg, rightupleg, rightlowleg, leftFoot, rightFoot;
+
+var near = 0.1;
+var far = 1000;
+var fov = 80;
 
 var theta =             [20, 0, 0, 20, 0, 0,        3.5, 1, 2.5, 0];
 var theta_end =         [20, -0.5, -1, 20, -0.5, 0, 2.5, 0, 2.5, 0];
 var theta_start =       [20, 0.5, 0, 20, 0.5, 1,    3.5, 1, 3.5, 1];
 var decrease_theta =    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
 var increase_theta =    [0, 1, 1, 0, 1, 1, 0, 1, 1, 1];
+
+var walk = false;
 
 var keys = {
     forward: false,
@@ -31,26 +37,26 @@ function initialize(){
     document.body.appendChild( renderer.domElement );
 
     //Camera
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, near, far );
     camera.position.set(75, 20, 0);
 
     //scene
     scene = new THREE.Scene();
 
     //Light
-    light = new THREE.DirectionalLight(0xFFFFFF, .8);
-    light.position.set(100, 100, 100);
+    light = new THREE.DirectionalLight(0xFFFFFF, .7);
+    light.position.set(100, 200, 100);
     light.target.position.set(0,0,0);
     light.castShadow = true;
     light.shadow.bias = -0.01;
     light.shadow.mapSize.width = 2048;
     light.shadow.mapSize.height = 2048;
-    light.shadow.camera.near = 1.0;
-    light.shadow.camera.far = 500;
-    light.shadow.camera.left = 200;
-    light.shadow.camera.right = -200;
-    light.shadow.camera.top = 200;
-    light.shadow.camera.bottom = -200; 
+    light.shadow.camera.near = near;
+    light.shadow.camera.far = far;
+    light.shadow.camera.left = 400;
+    light.shadow.camera.right = -400;
+    light.shadow.camera.top = 400;
+    light.shadow.camera.bottom = -400; 
     scene.add(light);
 
     ambientlight = new THREE.AmbientLight(0x404040);
@@ -75,11 +81,9 @@ function initialize(){
     scene.background=new THREE.CubeTextureLoader().setPath("skybox_img/").load(["mystic_lf.jpg","mystic_rt.jpg","mystic_up.jpg","mystic_dn.jpg","mystic_ft.jpg","mystic_bk.jpg"]);
 
     //plane
-    const plane = new THREE.Mesh(
+    plane = new THREE.Mesh(
         new THREE.PlaneGeometry(100, 100, 1, 1),
-        new THREE.MeshPhongMaterial({
-            color: 0xFFFFFF
-        })
+        new THREE.MeshPhongMaterial({color: 0xFFFFFF})
     );
     plane.castShadow = true;
     plane.recieveShadow = true;
@@ -112,11 +116,7 @@ function initialize(){
         leftFoot = loaded_model.getObjectByName('mixamorigLeftFoot');
         rightFoot = loaded_model.getObjectByName('mixamorigRightFoot');
 
-        
-
-        leftlowleg.rotation.x = 0;
-
-        //translation of the modelobject for correct orientaion
+        //rotation of the modelobject for correct start orientation
         leftarm.rotation.z = theta[0];
         rightarm.rotation.z = theta[0];
         
@@ -134,75 +134,78 @@ function initialize(){
 //character control
 function animate() {
 
-    const _Q = new THREE.Quaternion();
-    const _A = new THREE.Vector3();
-    const _R = loaded_model.quaternion.clone();
-
-    update();
+    const Q = new THREE.Quaternion();
+    const A = new THREE.Vector3();
+    const R = loaded_model.quaternion.clone();
+    walk = false;
+    
     requestAnimationFrame( animate );
     if(keys.forward){
-        console.log("forward");
-        // loaded_model.position.z 
+        walk = true;
         const forward = new THREE.Vector3(0, 0, 1);
-        forward.applyQuaternion(_R);
+        forward.applyQuaternion(R);
         forward.normalize();
         loaded_model.position.z -= forward.z * 0.7;
         loaded_model.position.x -= forward.x * 0.7;
     }
     if(keys.backward){
+        walk = true;
         const forward = new THREE.Vector3(0, 0, 1);
-        forward.applyQuaternion(_R);
+        forward.applyQuaternion(R);
         forward.normalize(); 
         loaded_model.position.z += forward.z * 0.7;
         loaded_model.position.x += forward.x * 0.7;  
     }
     if(keys.left){
-        // loaded_model.rotateY(0.1);
-        _A.set(0, 1, 0);
-        _Q.setFromAxisAngle(_A, 4.0 * Math.PI * 0.01);
-        _R.multiply(_Q);
-        loaded_model.quaternion.copy(_R);
+        walk = true;
+        A.set(0, 1, 0);
+        Q.setFromAxisAngle(A, 4.0 * Math.PI * 0.01);
+        R.multiply(Q);
+        loaded_model.quaternion.copy(R);
     }
     if(keys.right){
-        _A.set(0, 1, 0);
-        _Q.setFromAxisAngle(_A, -4.0 * Math.PI * 0.01);
-        _R.multiply(_Q);
-        loaded_model.quaternion.copy(_R);
-    
+        walk = true;
+        A.set(0, 1, 0);
+        Q.setFromAxisAngle(A, -4.0 * Math.PI * 0.01);
+        R.multiply(Q);
+        loaded_model.quaternion.copy(R);
     }
+    
+    update(walk);
     renderer.render( scene, camera );
 }
 
 
 
-function update(){
+function update(walk){
     
-    //left arm
-    setanitmaion_interval(1, 0.01, true, 2);
-    setanitmaion_interval(2, 0.01, true, 2);
-    leftarm.rotation.y = theta[1];
-    lefForeArm.rotation.x = theta[2];
-    
-    // //right arm
-    setanitmaion_interval(4, 0.01, true, 2);
-    setanitmaion_interval(5, 0.01, true, 2);
-    rightarm.rotation.y = theta[4];
-    rightForeArm.rotation.x = theta[5];
+    if(walk){
+        //left arm
+        setanitmaion_interval(1, 0.01, true, 2);
+        setanitmaion_interval(2, 0.01, true, 2);
+        leftarm.rotation.y = theta[1];
+        lefForeArm.rotation.x = theta[2];
+        
+        // //right arm
+        setanitmaion_interval(4, 0.01, true, 2);
+        setanitmaion_interval(5, 0.01, true, 2);
+        rightarm.rotation.y = theta[4];
+        rightForeArm.rotation.x = theta[5];
 
-    //left leg
-    setanitmaion_interval(6, 0.01, true, 2);
-    setanitmaion_interval(7, 0.01, true, 2);
-    leftupleg.rotation.x = theta[6];
-    leftlowleg.rotation.x = theta[7];
+        //left leg
+        setanitmaion_interval(6, 0.01, true, 2);
+        setanitmaion_interval(7, 0.01, true, 2);
+        leftupleg.rotation.x = theta[6];
+        leftlowleg.rotation.x = theta[7];
 
-    //right leg
-    setanitmaion_interval(8, 0.01, true, 2);
-    setanitmaion_interval(9, 0.01, true, 2);
-    rightupleg.rotation.x = theta[8];
-    rightlowleg.rotation.x = theta[9];
-    
-    // cube.rotation.y += 0.01;
-    // cube.rotation.x += 0.01;
+        //right leg
+        setanitmaion_interval(8, 0.01, true, 2);
+        setanitmaion_interval(9, 0.01, true, 2);
+        rightupleg.rotation.x = theta[8];
+        rightlowleg.rotation.x = theta[9];
+    }
+    cube.rotation.y += 0.05;
+    cube.rotation.x += 0.05;
 }
 
 function setanitmaion_interval(id, deltaTime, enable_descreace, speed){
@@ -285,6 +288,6 @@ function load_cube() {
 }
 
 initialize();
-// animate();
+
 
 
