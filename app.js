@@ -4,7 +4,7 @@ import {GLTFLoader} from 'https://cdn.jsdelivr.net/npm/three@0.118.1/examples/js
 import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.118/examples/jsm/controls/OrbitControls.js';
 
 
-let scene, camera, renderer, cube, light, ambientlight, plane;
+let scene, camera, renderer, sphere, light, ambientlight, plane;
 let loaded_model, leftarm , lefForeArm, rightarm, rightForeArm, leftupleg, leftlowleg, rightupleg, rightlowleg, leftFoot, rightFoot;
 
 var near = 0.1;
@@ -28,7 +28,7 @@ var keys = {
 
 function initialize(){
     //Renderer
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
     renderer.setClearColor("#e5e5e5");
@@ -66,12 +66,10 @@ function initialize(){
     window.addEventListener('resize', () => {
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
-
-        // camera.updateProjectMatrix();
     });
 
-    //Cube
-    load_cube();
+    //sphere
+    load_sphere();
 
     //controls
     let controls = new OrbitControls(camera, renderer.domElement);
@@ -204,8 +202,8 @@ function update(walk){
         rightupleg.rotation.x = theta[8];
         rightlowleg.rotation.x = theta[9];
     }
-    cube.rotation.y += 0.05;
-    cube.rotation.x += 0.05;
+    sphere.rotation.y += 0.05;
+    // sphere.rotation.x += 0.05;
 }
 
 function setanitmaion_interval(id, deltaTime, enable_descreace, speed){
@@ -276,15 +274,15 @@ function dumpObject(obj, lines = [], isLast = true, prefix = '') {
     return lines;
 }
 
-function load_cube() {
-    const geometry = new THREE.BoxGeometry( 5, 5, 5 );
-    const material = new THREE.MeshPhongMaterial( { color: 0xFFAD0 } );
-    cube = new THREE.Mesh( geometry, material );
-    cube.position.z = -5;
-    cube.position.y = -15;
-    cube.castShadow = true;
-    cube.recieveShadow = true;
-    scene.add( cube );
+function load_sphere() {
+    const geometry = new THREE.SphereGeometry( 5, 25, 25 );
+    const material = new THREE.MeshPhongMaterial( { map: new THREE.TextureLoader().load('sphere_texture/neptune.jpg') } );
+    sphere = new THREE.Mesh( geometry, material );
+    sphere.position.z = -20;
+    sphere.position.y = 0;
+    sphere.castShadow = true;
+    sphere.recieveShadow = true;
+    scene.add( sphere );
 }
 
 initialize();
